@@ -1,7 +1,7 @@
 import streamlit as st
 
 # ---- PAGE CONFIG ----
-st.set_page_config(page_title="EonCoin Exchange", layout="wide")
+st.set_page_config(page_title="Crypto Exchange Login", layout="centered")
 
 # ---- CSS STYLING ----
 st.markdown("""
@@ -10,14 +10,13 @@ st.markdown("""
             background-color: #0d1117;
             color: white;
         }
-        .login-box {
+        .box {
             background-color: #0f1a2b;
-            padding: 40px;
+            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        input {
-            border-radius: 8px !important;
+            max-width: 400px;
+            margin: auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6);
         }
         .stButton button {
             background: linear-gradient(90deg, #0072ff, #00c6ff);
@@ -44,42 +43,30 @@ if "page" not in st.session_state:
 
 # ---- LOGIN PAGE ----
 def login_page():
-    col1, col2 = st.columns([1,1])
-    with col1:
-        st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-        st.subheader("Login to EONCOIN")
+    st.markdown("<div class='box'>", unsafe_allow_html=True)
+    st.subheader("🔐 Login to Crypto Exchange")
 
-        st.text_input("User Name", key="login_user", placeholder="Enter username", label_visibility="collapsed")
-        st.text_input("Password", type="password", key="login_pass", placeholder="Enter password", label_visibility="collapsed")
+    st.text_input("Username", key="login_user", placeholder="Enter username")
+    st.text_input("Password", type="password", key="login_pass", placeholder="Enter password")
 
-        col3, col4 = st.columns([1,1])
-        with col3:
-            st.checkbox("Remember Me")
-        with col4:
-            if st.button("Forgot Password?"):
-                st.session_state.page = "forgot"
+    if st.button("Login"):
+        st.success("✅ Logged in successfully!")
 
-        if st.button("Login to your Account"):
-            st.success("✅ Logged in successfully!")
+    if st.button("Forgot Password?"):
+        st.session_state.page = "forgot"
 
-        st.markdown("---")
-        st.markdown("or Sign In with")
-        st.write("🔵 Google | 🔵 Facebook | 🔵 Twitter | 🔵 LinkedIn")
+    st.markdown("---")
+    st.markdown("Don't have an account?")
+    if st.button("Sign Up"):
+        st.session_state.page = "signup"
 
-        st.markdown("Don't have an account? <span class='link'>Register Now</span>", unsafe_allow_html=True)
-        if st.button("Register Now"):
-            st.session_state.page = "signup"
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col2:
-        st.image("image-removebg-preview.png")
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ---- SIGNUP PAGE ----
 def signup_page():
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.subheader("Create New Account")
+    st.markdown("<div class='box'>", unsafe_allow_html=True)
+    st.subheader("📝 Create New Account")
 
     st.text_input("Full Name")
     st.text_input("Email Address")
@@ -98,8 +85,8 @@ def signup_page():
 
 # ---- FORGOT PASSWORD PAGE ----
 def forgot_page():
-    st.markdown("<div class='login-box'>", unsafe_allow_html=True)
-    st.subheader("Recover Password")
+    st.markdown("<div class='box'>", unsafe_allow_html=True)
+    st.subheader("🔑 Recover Password")
 
     st.write("Choose a method to reset your password:")
     if st.button("Reset via Email"):
@@ -122,4 +109,3 @@ elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_page()
-
