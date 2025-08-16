@@ -1,22 +1,14 @@
 import streamlit as st
 import plotly.graph_objects as go
 import yfinance as yf
-import pandas as pd
 
-# ----------------------------
-# Page Config
-# ----------------------------
 st.set_page_config(page_title="Crypto Exchange", layout="wide")
 
 # ----------------------------
-# Custom CSS
+# Header (CSS + HTML)
 # ----------------------------
 st.markdown("""
     <style>
-    body {
-        background-color: #0d0d0d;
-        color: white;
-    }
     .header {
         display: flex;
         justify-content: space-between;
@@ -61,9 +53,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ----------------------------
-# Header
-# ----------------------------
 st.markdown("""
 <div class="header">
     <div class="logo">Crypto Exchange</div>
@@ -78,7 +67,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-
 # ----------------------------
 # Crypto Tickers
 # ----------------------------
@@ -91,31 +79,45 @@ cryptos = {
     "Solana": "SOL-USD"
 }
 
-# ----------------------------
-# Display Crypto Cards
-# ----------------------------
 cols = st.columns(len(cryptos))
 
+# ----------------------------
+# Loop over coins
+# ----------------------------
 for i, (name, ticker) in enumerate(cryptos.items()):
-    data = yf.download(ticker, period="7d", interval="1h")
-    latest_price = data["Close"].iloc[-1]
+    try:
+        data = yf.download(ticker, period="7d", interval="1h")
+        
+        if data.empty:
+            price = "N/A"
+            with cols[i]:
+                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>{price}</h3><p>No Data</p></div>", unsafe_allow_html=True)
+        else:
+            latest_price = data["Close"].iloc[-1]
 
-    # Mini Chart
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=data.index,
-        y=data["Close"],
-        mode="lines",
-        line=dict(color="lime" if data["Close"].iloc[-1] > data["Close"].iloc[0] else "red", width=2)
-    ))
-    fig.update_layout(
-        template="plotly_dark",
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=100,
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False)
-    )
+            # choose line color based on trend
+            color = "lime" if latest_price > data["Close"].iloc[0] else "red"
 
-    with cols[i]:
-        st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>${latest_price:,.2f}</h3></div>", unsafe_allow_html=True)
-        st.plotly_chart(fig, use_container_width=True)
+            # Mini chart
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data["Close"],
+                mode="lines",
+                line=dict(color=color, width=2)
+            ))
+            fig.update_layout(
+                template="plotly_dark",
+                margin=dict(l=0, r=0, t=0, b=0),
+                height=100,
+                xaxis=dict(visible=False),
+                yaxis=dict(visible=False)
+            )
+
+            with cols[i]:
+                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>${latest_price:,.2f}</h3></div>", unsafe_allow_html=True)
+                st.plotly_chart(fig, use_container_width=True)
+    
+    except Exception as e:
+        with cols[i]:
+            st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>Error</h3><p>{str(e)}</p></div>", unsafe_allow_html=True)
