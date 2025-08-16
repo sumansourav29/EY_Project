@@ -1,16 +1,10 @@
 import streamlit as st
-import random
-import string
-
-# Generate random alphanumeric OTP
-def generate_otp(length=6):
-    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 # ----------------------
 # Login Page
 # ----------------------
 def login_page():
-    st.title("🔑 Login")
+    st.title("🔑 Login Page")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
@@ -18,20 +12,72 @@ def login_page():
     if st.button("Login"):
         if username == "admin" and password == "12345":
             st.session_state.page = "otp"
-            st.session_state.otp = generate_otp()
         else:
-            st.error("❌ Invalid Username or Password")
+            st.error("Invalid username or password")
 
-    st.write("---")
-    col1, col2 = st.columns(2)
+    st.markdown(
+        """
+        <div style="text-align:center; margin-top:15px;">
+            <a href="?signup=true" style="margin-right:20px; font-weight:bold;">Sign Up</a>
+            <a href="?forgot=true" style="font-weight:bold;">Forgot Password?</a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col1:
-        if st.button("Sign Up"):
-            st.session_state.page = "signup"
+    # Handle query params
+    query_params = st.query_params
+    if "signup" in query_params:
+        st.session_state.page = "signup"
+        st.query_params.clear()
+    if "forgot" in query_params:
+        st.session_state.page = "forgot"
+        st.query_params.clear()
 
-    with col2:
-        if st.button("Forgot Password"):
-            st.session_state.page = "forgot"
+
+# ----------------------
+# Sign Up Page
+# ----------------------
+def signup_page():
+    st.title("📝 Sign Up")
+
+    new_user = st.text_input("New Username")
+    new_email = st.text_input("Email")
+    new_password = st.text_input("Password", type="password")
+    confirm_password = st.text_input("Confirm Password", type="password")
+
+    if st.button("Register"):
+        if new_password == confirm_password:
+            st.success("✅ Account created successfully! Please login.")
+            st.session_state.page = "login"
+        else:
+            st.error("❌ Passwords do not match.")
+
+    st.markdown('<a href="?back=true">⬅️ Back to Login</a>', unsafe_allow_html=True)
+
+    query_params = st.query_params
+    if "back" in query_params:
+        st.session_state.page = "login"
+        st.query_params.clear()
+
+
+# ----------------------
+# Forget Password Page
+# ----------------------
+def forgot_password_page():
+    st.title("🔒 Forgot Password")
+
+    email = st.text_input("Enter your registered Email")
+
+    if st.button("Send Reset Link"):
+        st.success(f"📩 Reset link sent to {email}")
+
+    st.markdown('<a href="?back=true">⬅️ Back to Login</a>', unsafe_allow_html=True)
+
+    query_params = st.query_params
+    if "back" in query_params:
+        st.session_state.page = "login"
+        st.query_params.clear()
 
 
 # ----------------------
@@ -43,7 +89,9 @@ def otp_page():
 
     CORRECT_OTP = "291004"
 
-    # CSS and JS
+    if "otp_popup" not in st.session_state:
+        st.session_state.otp_popup = None
+
     st.markdown(
         """
         <style>
@@ -56,26 +104,6 @@ def otp_page():
             border: 2px solid #00ccaa;
             border-radius: 8px;
             margin: 3px;
-        }
-        .verify-btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        .verify-btn:disabled {
-            background-color: #cccccc !important;
-            color: #666666 !important;
-            cursor: not-allowed !important;
-        }
-        .verify-btn:enabled {
-            background-color: #00ccaa !important;
-            color: white !important;
-            cursor: pointer !important;
-            box-shadow: 0px 0px 10px rgba(0, 204, 170, 0.8);
         }
         .link-container {
             text-align:center;
@@ -108,7 +136,6 @@ def otp_page():
         unsafe_allow_html=True
     )
 
-    # OTP input fields
     cols = st.columns(6)
     otp_digits = []
     for i, col in enumerate(cols):
@@ -120,7 +147,7 @@ def otp_page():
 
     otp_entered = "".join(otp_digits)
 
-    # Auto-jump JS
+    # Auto-focus script
     st.markdown(
         """
         <script>
@@ -131,38 +158,22 @@ def otp_page():
                     inputs[index + 1].focus();
                 }
             });
-            input.addEventListener("keydown", (e) => {
-                if (e.key === "Backspace" && input.value === "" && index > 0) {
-                    inputs[index - 1].focus();
-                }
-            });
         });
         </script>
         """,
         unsafe_allow_html=True
     )
 
-    # Verify OTP button (styled)
     verify_disabled = len(otp_entered) < 6
-    btn_html = f"""
-        <form action="" method="get">
-            <button class="verify-btn" type="submit" name="verify" value="1" {'disabled' if verify_disabled else ''}>
-                Verify OTP
-            </button>
-        </form>
-    """
-    st.markdown(btn_html, unsafe_allow_html=True)
-
-    # Check query param when clicked
-    query_params = st.query_params
-    if "verify" in query_params:
+    if st.button("Verify OTP", disabled=verify_disabled):
         if otp_entered == CORRECT_OTP:
-            st.markdown('<div class="popup">✅ Login Successful!</div>', unsafe_allow_html=True)
+            st.session_state.otp_popup = '<div class="popup">✅ Login Successful!</div>'
         else:
-            st.markdown('<div class="popup" style="color:red;">❌ Wrong OTP, Try Again</div>', unsafe_allow_html=True)
-        st.query_params.clear()
+            st.session_state.otp_popup = '<div class="popup" style="color:red;">❌ Wrong OTP, try again</div>'
 
-    # Links
+    if st.session_state.otp_popup:
+        st.markdown(st.session_state.otp_popup, unsafe_allow_html=True)
+
     st.markdown(
         """
         <div class="link-container">
@@ -173,6 +184,7 @@ def otp_page():
         unsafe_allow_html=True
     )
 
+    query_params = st.query_params
     if "resend" in query_params:
         st.info("📩 New OTP has been sent! (For testing: 291004)")
         st.query_params.clear()
@@ -181,57 +193,17 @@ def otp_page():
         st.query_params.clear()
 
 
-
-
-
 # ----------------------
-# Signup Page
-# ----------------------
-def signup_page():
-    st.title("📝 Sign Up")
-
-    new_user = st.text_input("Choose Username")
-    new_email = st.text_input("Enter Email")
-    new_pass = st.text_input("Choose Password", type="password")
-
-    if st.button("Create Account"):
-        st.success("✅ Account created successfully! Please login.")
-        st.session_state.page = "login"
-
-    if st.button("Back to Login"):
-        st.session_state.page = "login"
-
-
-# ----------------------
-# Forgot Password Page
-# ----------------------
-def forgot_password_page():
-    st.title("🔒 Forgot Password")
-
-    email = st.text_input("Enter your registered email")
-
-    if st.button("Reset Password"):
-        st.info("📩 Password reset link sent to your email!")
-        st.session_state.page = "login"
-
-    if st.button("Back to Login"):
-        st.session_state.page = "login"
-
-
-# ----------------------
-# Main Navigation
+# Main App
 # ----------------------
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
 if st.session_state.page == "login":
     login_page()
-elif st.session_state.page == "otp":
-    otp_page()
 elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_password_page()
-
-
-
+elif st.session_state.page == "otp":
+    otp_page()
