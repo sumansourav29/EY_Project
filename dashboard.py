@@ -5,7 +5,7 @@ import yfinance as yf
 st.set_page_config(page_title="Crypto Exchange", layout="wide")
 
 # ----------------------------
-# Header (CSS + HTML)
+# Header
 # ----------------------------
 st.markdown("""
     <style>
@@ -50,6 +50,18 @@ st.markdown("""
         color: white;
         text-align: center;
     }
+    .price {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    .change-pos {
+        color: lime;
+        font-weight: bold;
+    }
+    .change-neg {
+        color: red;
+        font-weight: bold;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -68,7 +80,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# Crypto Tickers
+# Crypto List
 # ----------------------------
 cryptos = {
     "Bitcoin": "BTC-USD",
@@ -82,23 +94,25 @@ cryptos = {
 cols = st.columns(len(cryptos))
 
 # ----------------------------
-# Loop over coins
+# Loop Coins
 # ----------------------------
 for i, (name, ticker) in enumerate(cryptos.items()):
     try:
         data = yf.download(ticker, period="7d", interval="1h")
-        
+
         if data.empty:
-            price = "N/A"
             with cols[i]:
-                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>{price}</h3><p>No Data</p></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>N/A</h3><p>No Data</p></div>", unsafe_allow_html=True)
         else:
             latest_price = data["Close"].iloc[-1]
+            prev_price = data["Close"].iloc[-24] if len(data) > 24 else data["Close"].iloc[0]
 
-            # choose line color based on trend
+            change_pct = ((latest_price - prev_price) / prev_price) * 100
+            change_class = "change-pos" if change_pct >= 0 else "change-neg"
+            change_symbol = "↑" if change_pct >= 0 else "↓"
+
+            # Trend line
             color = "lime" if latest_price > data["Close"].iloc[0] else "red"
-
-            # Mini chart
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=data.index,
@@ -115,9 +129,15 @@ for i, (name, ticker) in enumerate(cryptos.items()):
             )
 
             with cols[i]:
-                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>${latest_price:,.2f}</h3></div>", unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='crypto-card'>"
+                    f"<h4>{name}</h4>"
+                    f"<div class='price'>${latest_price:,.2f}</div>"
+                    f"<div class='{change_class}'>{change_symbol} {change_pct:.2f}% (24h)</div>"
+                    f"</div>", unsafe_allow_html=True
+                )
                 st.plotly_chart(fig, use_container_width=True)
-    
+
     except Exception as e:
         with cols[i]:
             st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>Error</h3><p>{str(e)}</p></div>", unsafe_allow_html=True)
