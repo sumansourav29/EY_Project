@@ -41,16 +41,19 @@ def otp_page():
     st.title("🔐 Email Verification")
     st.write("OTP has been sent to **su.....@gmail.com**")
 
-    # CSS for square OTP boxes
+    # Fixed OTP for verification
+    CORRECT_OTP = "291004"
+
+    # CSS for square OTP boxes + auto focus
     st.markdown(
         """
         <style>
         .otp-input input {
             text-align: center;
-            font-size: 20px !important;
+            font-size: 22px !important;
             font-weight: bold;
-            width: 45px !important;
-            height: 45px !important;
+            width: 50px !important;
+            height: 50px !important;
             border: 2px solid #00ccaa;
             border-radius: 8px;
             margin: 3px;
@@ -64,18 +67,44 @@ def otp_page():
             font-weight:bold;
             font-size: 14px;
         }
-        .resend {
-            color:#00ccaa;
-        }
-        .back {
-            color:#ff4b4b;
+        .resend { color:#00ccaa; }
+        .back { color:#ff4b4b; }
+
+        /* Popup modal */
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 9999;
         }
         </style>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function(){
+            const inputs = document.querySelectorAll("input[type='text']");
+            inputs.forEach((input, index) => {
+                input.addEventListener("input", () => {
+                    if (input.value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+            });
+        });
+        </script>
         """,
         unsafe_allow_html=True
     )
 
-    # OTP input fields (6 boxes)
+    # OTP input fields
     cols = st.columns(6)
     otp_digits = []
     for i, col in enumerate(cols):
@@ -85,12 +114,13 @@ def otp_page():
 
     otp_entered = "".join(otp_digits)
 
-    if st.button("Verify OTP"):
-        if otp_entered == st.session_state.get("otp", ""):
-            st.success("✅ OTP Verified! Welcome to Crypto Exchange 🚀")
-            st.balloons()
+    # Verify OTP button (disabled until all boxes filled)
+    verify_disabled = len(otp_entered) < 6
+    if st.button("Verify OTP", disabled=verify_disabled):
+        if otp_entered == CORRECT_OTP:
+            st.markdown('<div class="popup">✅ Login Successful!</div>', unsafe_allow_html=True)
         else:
-            st.error("❌ Invalid OTP. Please try again.")
+            st.markdown('<div class="popup" style="color:red;">❌ Wrong OTP, try again</div>', unsafe_allow_html=True)
 
     # Hyperlinks for actions
     st.markdown(
@@ -103,15 +133,15 @@ def otp_page():
         unsafe_allow_html=True
     )
 
-    # Handle link clicks using new query_params API
-    query_params = st.query_params  # ✅ new method
+    # Handle link clicks with st.query_params
+    query_params = st.query_params
     if "resend" in query_params:
-        st.session_state.otp = generate_otp()
-        st.info(f"📩 New OTP has been sent! (For testing: {st.session_state.otp})")
-        st.query_params.clear()  # clear params
+        st.info("📩 New OTP has been sent! (For testing: 291004)")
+        st.query_params.clear()
     if "back" in query_params:
         st.session_state.page = "login"
-        st.query_params.clear()  # clear params
+        st.query_params.clear()
+
 
 
 
@@ -163,4 +193,5 @@ elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_password_page()
+
 
