@@ -117,7 +117,7 @@ st.markdown(header_css + header_html, unsafe_allow_html=True)
 
 # ----------- Handle Navigation Events from JS -----------
 
-nav_event = st.experimental_get_query_params().get("nav", [None])[0]
+nav_event = st.query_params.get("nav", None)
 
 # Sync JS click with session_state
 st.markdown("""
@@ -160,4 +160,3 @@ elif page == "News":
 elif page == "Settings":
     st.subheader("⚙️ Settings Section")
     st.write("Change profile, preferences, etc.")
-
