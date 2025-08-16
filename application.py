@@ -1,122 +1,121 @@
 import streamlit as st
 
-# ----------------------
-# Fake user database (in memory only for demo)
-# ----------------------
+# -- INITIALIZE --
 if "USER_CREDENTIALS" not in st.session_state:
-    st.session_state.USER_CREDENTIALS = {
-        "satoshi": "bitcoin123",
-        "vitalik": "ethereum2025",
-        "admin": "cryptoMaster"
-    }
+    st.session_state.USER_CREDENTIALS = {"satoshi": "bitcoin123"}
 
-# ----------------------
-# Page Config
-# ----------------------
-st.set_page_config(page_title="Crypto Exchange", page_icon="🪙", layout="centered")
-
-# ----------------------
-# Navigation state
-# ----------------------
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# ----------------------
-# LOGIN PAGE
-# ----------------------
-if st.session_state.page == "login":
-    st.markdown("<h1 style='text-align: center; color: #00ffcc;'>🚀 Crypto Exchange Login</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:gray;'>Secure access to your digital assets</p>", unsafe_allow_html=True)
+st.set_page_config(page_title="Crypto Exchange", page_icon="🪙", layout="centered")
 
+# -- CSS STYLING --
+st.markdown("""
+<style>
+    body {
+        background: #020202;
+        color: white;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .glass {
+        background: rgba(20, 20, 30, 0.6);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
+        backdrop-filter: blur(8px);
+        margin: auto;
+    }
+
+    .neon-input input {
+        background: transparent;
+        color: white;
+        border: 2px solid #00ffcc;
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 1em;
+    }
+
+    .neon-input input:focus {
+        box-shadow: 0 0 8px #00ffcc;
+        outline: none;
+    }
+
+    .neon-btn>button {
+        background: linear-gradient(90deg, #00ffcc, #599edb);
+        border: none;
+        color: black;
+        font-size: 1em;
+        padding: 0.6em 1.4em;
+        border-radius: 12px;
+        font-weight: bold;
+        text-shadow: 0 0 4px rgba(0,0,0,0.5);
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .neon-btn>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 12px #00ffcc;
+    }
+
+    h1 { color: #00ffcc; font-family: 'Orbitron', sans-serif; text-align: center; }
+    p { text-align: center; color: #888; }
+</style>
+""", unsafe_allow_html=True)
+
+# -- PAGES --
+def show_login():
+    st.markdown("<div class='glass'><h1>Crypto Login</h1><p>Secure access to your assets</p></div>", unsafe_allow_html=True)
     with st.form("login_form"):
-        username = st.text_input("👤 Username")
-        password = st.text_input("🔑 Password", type="password")
-        submitted = st.form_submit_button("Login")
-
-        if submitted:
-            if username in st.session_state.USER_CREDENTIALS and st.session_state.USER_CREDENTIALS[username] == password:
-                st.success(f"✅ Welcome back, {username}! 🚀")
+        st.text_input("Username", key="login_user", placeholder="Enter username", label_visibility="collapsed", **{"class":"neon-input"})
+        st.text_input("Password", type="password", key="login_pass", placeholder="Enter password", label_visibility="collapsed", **{"class":"neon-input"})
+        if st.form_submit_button("Login", **{"class":"neon-btn"}):
+            u, p = st.session_state.login_user, st.session_state.login_pass
+            if u in st.session_state.USER_CREDENTIALS and st.session_state.USER_CREDENTIALS[u] == p:
+                st.success(f"Welcome back, **{u}**! 🚀")
                 st.balloons()
             else:
-                st.error("❌ Invalid Username or Password")
+                st.error("Invalid credentials")
 
-    # Links
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔒 Forgot Password?"):
-            st.session_state.page = "forgot"
-            st.rerun()
-
+        if st.button("Forgot Password?", key="fp_btn"):
+            st.session_state.page = "forgot"; st.rerun()
     with col2:
-        if st.button("📝 Sign Up"):
-            st.session_state.page = "signup"
-            st.rerun()
+        if st.button("Sign Up", key="su_btn"):
+            st.session_state.page = "signup"; st.rerun()
 
-# ----------------------
-# FORGOT PASSWORD PAGE
-# ----------------------
-elif st.session_state.page == "forgot":
-    st.markdown("<h1 style='text-align: center; color: #ffcc00;'>🔒 Recover Your Account</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:gray;'>Choose a method to reset your password</p>", unsafe_allow_html=True)
+def show_forgot():
+    st.markdown("<div class='glass'><h1>Recover Account</h1><p>Pick a recovery option</p></div>", unsafe_allow_html=True)
+    option = st.radio("", ["Email", "Mobile OTP", "Auth App", "Security Qs"], label_visibility="collapsed")
+    if st.button("Proceed"):
+        st.success(f"Recovery via **{option}** triggered!")
+    if st.button("Back to Login"):
+        st.session_state.page = "login"; st.rerun()
 
-    option = st.radio(
-        "Select recovery option:",
-        ["📧 Reset via Email", "📱 Reset via Mobile OTP", "🔐 Google Authenticator", "❓ Security Questions"]
-    )
-
-    if option == "📧 Reset via Email":
-        email = st.text_input("Enter your registered email:")
-        if st.button("Send Reset Link"):
-            st.success(f"📨 Password reset link sent to {email}")
-
-    elif option == "📱 Reset via Mobile OTP":
-        phone = st.text_input("Enter your mobile number:")
-        if st.button("Send OTP"):
-            st.success(f"📲 OTP sent to {phone}")
-
-    elif option == "🔐 Google Authenticator":
-        code = st.text_input("Enter 6-digit Authenticator Code:")
-        if st.button("Verify"):
-            st.success("✅ Authenticator verified! You can reset your password now.")
-
-    elif option == "❓ Security Questions":
-        q1 = st.text_input("What is the name of your first pet?")
-        q2 = st.text_input("What city were you born in?")
-        if st.button("Submit Answers"):
-            st.success("✅ Security questions verified! You can reset your password.")
-
-    if st.button("⬅ Back to Login"):
-        st.session_state.page = "login"
-        st.rerun()
-
-# ----------------------
-# SIGN UP PAGE
-# ----------------------
-elif st.session_state.page == "signup":
-    st.markdown("<h1 style='text-align: center; color: #00ffcc;'>📝 Create New Account</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center; color:gray;'>Join the crypto revolution today 🚀</p>", unsafe_allow_html=True)
-
+def show_signup():
+    st.markdown("<div class='glass'><h1>Sign Up</h1><p>Create your crypto account</p></div>", unsafe_allow_html=True)
     with st.form("signup_form"):
-        new_user = st.text_input("👤 Choose a Username")
-        new_pass = st.text_input("🔑 Choose a Password", type="password")
-        confirm_pass = st.text_input("🔑 Confirm Password", type="password")
-        email = st.text_input("📧 Email Address")
-
-        submitted = st.form_submit_button("Create Account")
-
-        if submitted:
-            if new_user in st.session_state.USER_CREDENTIALS:
-                st.error("⚠️ Username already exists. Please choose another.")
-            elif new_pass != confirm_pass:
-                st.error("❌ Passwords do not match.")
-            elif new_user == "" or new_pass == "" or email == "":
-                st.error("⚠️ All fields are required.")
+        st.text_input("Username", key="su_user", placeholder="Pick a username", label_visibility="collapsed", **{"class":"neon-input"})
+        st.text_input("Email", key="su_email", placeholder="you@example.com", label_visibility="collapsed", **{"class":"neon-input"})
+        st.text_input("Password", type="password", key="su_pass", placeholder="Password", label_visibility="collapsed", **{"class":"neon-input"})
+        st.text_input("Confirm Password", type="password", key="su_pass2", placeholder="Confirm Password", label_visibility="collapsed", **{"class":"neon-input"})
+        if st.form_submit_button("Create Account", **{"class":"neon-btn"}):
+            u, p1, p2 = st.session_state.su_user, st.session_state.su_pass, st.session_state.su_pass2
+            if u in st.session_state.USER_CREDENTIALS: st.error("Username already taken")
+            elif p1 != p2: st.error("Passwords do not match")
             else:
-                st.session_state.USER_CREDENTIALS[new_user] = new_pass
-                st.success(f"✅ Account created successfully for {new_user}!")
-                st.session_state.page = "login"
-                st.rerun()
+                st.session_state.USER_CREDENTIALS[u] = p1
+                st.success(f"Account created for **{u}**!")
+                st.snow()
+                st.session_state.page = "login"; st.rerun()
+    if st.button("Back to Login"):
+        st.session_state.page = "login"; st.rerun()
 
-    if st.button("⬅ Back to Login"):
-        st.session_state.page = "login"
-        st.rerun()
+# -- ROUTE --
+if st.session_state.page == "login":
+    show_login()
+elif st.session_state.page == "forgot":
+    show_forgot()
+elif st.session_state.page == "signup":
+    show_signup()
