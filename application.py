@@ -15,23 +15,40 @@ USER_CREDENTIALS = {
 st.set_page_config(page_title="Crypto Exchange Login", page_icon="🪙", layout="centered")
 
 # ----------------------
-# OTP Page
+# OTP Page (Updated)
 # ----------------------
 def otp_page():
     st.title("🔐 Email Verification")
     st.write("OTP has been sent to **su.....@gmail.com**")
 
+    # CSS for square OTP boxes
+    st.markdown(
+        """
+        <style>
+        .otp-input input {
+            text-align: center;
+            font-size: 20px !important;
+            font-weight: bold;
+            width: 45px !important;
+            height: 45px !important;
+            border: 2px solid #00ccaa;
+            border-radius: 8px;
+            margin: 3px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     # OTP input fields (6 boxes with unique keys)
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    cols = st.columns(6)
+    otp_digits = []
+    for i, col in enumerate(cols):
+        with col:
+            digit = st.text_input("", max_chars=1, key=f"otp{i}", label_visibility="collapsed")
+            otp_digits.append(digit)
 
-    with col1: d1 = st.text_input("", max_chars=1, key="otp1")
-    with col2: d2 = st.text_input("", max_chars=1, key="otp2")
-    with col3: d3 = st.text_input("", max_chars=1, key="otp3")
-    with col4: d4 = st.text_input("", max_chars=1, key="otp4")
-    with col5: d5 = st.text_input("", max_chars=1, key="otp5")
-    with col6: d6 = st.text_input("", max_chars=1, key="otp6")
-
-    otp_entered = "".join([d1, d2, d3, d4, d5, d6])
+    otp_entered = "".join(otp_digits)
 
     if st.button("Verify OTP"):
         if otp_entered == "A1B2C3":  # Example OTP
@@ -40,10 +57,35 @@ def otp_page():
         else:
             st.error("❌ Invalid OTP. Please try again.")
 
-    st.button("🔄 Resend OTP")
+    # Links instead of buttons
+    st.markdown(
+        """
+        <div style="text-align:center; margin-top: 10px;">
+            <a href="#" style="text-decoration:none; color:#00ccaa; font-weight:bold;" onclick="send_resend()">🔄 Resend OTP</a> &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="#" style="text-decoration:none; color:#ff4b4b; font-weight:bold;" onclick="back_login()">⬅️ Back to Login</a>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    if st.button("⬅️ Back to Login"):
+    # Handle link clicks via session state
+    if st.session_state.get("resend_clicked", False):
+        st.info("📩 New OTP has been sent!")
+        st.session_state.resend_clicked = False
+
+    if st.session_state.get("back_clicked", False):
         st.session_state.page = "login"
+        st.session_state.back_clicked = False
+
+    # Workaround to simulate hyperlinks
+    c1, c2 = st.columns([1,1])
+    with c1:
+        if st.button("Resend OTP (hidden)", key="resend_hidden", help="Hidden button"):
+            st.session_state.resend_clicked = True
+    with c2:
+        if st.button("Back to Login (hidden)", key="back_hidden", help="Hidden button"):
+            st.session_state.back_clicked = True
+
 
 # ----------------------
 # Sign Up Page
@@ -133,3 +175,4 @@ elif st.session_state.page == "forgot_password":
     forgot_password_page()
 elif st.session_state.page == "otp":
     otp_page()
+
