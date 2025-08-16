@@ -73,7 +73,7 @@ def login_page():
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
-        st.image("https://cdn.dribbble.com/userupload/32903725/file/original-302ccb078e25391e57a3f67ec27de805.jpg?resize=600x0")
+        st.image("image-removebg-preview.png")
 
 
 # ---- SIGNUP PAGE ----
@@ -122,3 +122,4 @@ elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_page()
+
