@@ -3,7 +3,7 @@ import yfinance as yf
 import plotly.graph_objects as go
 
 # ---------------------------
-# Header
+# Page Setup
 # ---------------------------
 st.set_page_config(page_title="Crypto Dashboard", layout="wide")
 
@@ -17,6 +17,7 @@ st.markdown("""
         background-color: #111;
         color: white;
         border-radius: 10px;
+        margin-bottom: 20px;
     }
     .header .left {
         font-size: 24px;
@@ -37,6 +38,22 @@ st.markdown("""
         align-items: center;
         cursor: pointer;
     }
+    .card {
+        background-color: #1e1e1e;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.5);
+    }
+    .card h3 {
+        margin: 0;
+        font-size: 18px;
+        color: white;
+    }
+    .metric {
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
     </style>
 
     <div class="header">
@@ -53,9 +70,9 @@ st.markdown("""
 
 
 # ---------------------------
-# Function to create crypto box
+# Function to create crypto card
 # ---------------------------
-def crypto_box(symbol, name):
+def crypto_card(symbol, name):
     try:
         data = yf.download(symbol, period="7d", interval="1h")
         if data.empty:
@@ -77,33 +94,35 @@ def crypto_box(symbol, name):
         fig.update_layout(
             xaxis=dict(showgrid=False, showticklabels=False),
             yaxis=dict(showgrid=False, showticklabels=False),
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=200
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=120,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)"
         )
 
-        st.markdown(f"### {name}")
-        st.metric(label="Price", value=f"${current_price:,.2f}", delta=f"{change:.2f}%")
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown(f"""
+            <div class="card">
+                <h3>{name}</h3>
+                <div class="metric">💵 ${current_price:,.2f}</div>
+                <div class="metric">📈 {change:.2f}%</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     except Exception as e:
         st.error(f"Error loading {name}: {e}")
 
 
 # ---------------------------
-# Display 6 Crypto Boxes
+# Display Small Crypto Cards in Grid
 # ---------------------------
 col1, col2, col3 = st.columns(3)
-with col1:
-    crypto_box("BTC-USD", "Bitcoin")
-with col2:
-    crypto_box("ETH-USD", "Ethereum")
-with col3:
-    crypto_box("BNB-USD", "Binance Coin")
+with col1: crypto_card("BTC-USD", "Bitcoin")
+with col2: crypto_card("ETH-USD", "Ethereum")
+with col3: crypto_card("BNB-USD", "Binance Coin")
 
 col4, col5, col6 = st.columns(3)
-with col4:
-    crypto_box("ADA-USD", "Cardano")
-with col5:
-    crypto_box("XRP-USD", "Ripple")
-with col6:
-    crypto_box("SOL-USD", "Solana")
+with col4: crypto_card("ADA-USD", "Cardano")
+with col5: crypto_card("XRP-USD", "Ripple")
+with col6: crypto_card("SOL-USD", "Solana")
