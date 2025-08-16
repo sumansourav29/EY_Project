@@ -44,17 +44,28 @@ def login_page():
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
-    if st.button("Login"):
-        if username in st.session_state.users and st.session_state.users[username]["password"] == password:
-            st.session_state.current_user = username
-            if username == "admin":  # Special case for admin
-                send_otp(st.session_state.users[username]["email"])
-                st.session_state.stage = "admin_otp"
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    with col1:
+        if st.button("Login"):
+            if username in st.session_state.users and st.session_state.users[username]["password"] == password:
+                st.session_state.current_user = username
+                if username == "admin":  # Special case for admin
+                    send_otp(st.session_state.users[username]["email"])
+                    st.session_state.stage = "admin_otp"
+                else:
+                    st.success(f"✅ Welcome {username}!")
+                    st.session_state.stage = "home"
             else:
-                st.success(f"✅ Welcome {username}!")
-                st.session_state.stage = "home"
-        else:
-            st.error("❌ Invalid username or password")
+                st.error("❌ Invalid username or password")
+
+    with col2:
+        if st.button("Forgot Password?"):
+            st.session_state.stage = "forgot_password"
+
+    with col3:
+        if st.button("Sign Up"):
+            st.session_state.stage = "signup"
 
 
 # ----------------------
@@ -89,6 +100,48 @@ def admin_otp_page():
 
 
 # ----------------------
+# FORGOT PASSWORD PAGE
+# ----------------------
+def forgot_password_page():
+    st.title("🔑 Forgot Password")
+
+    username = st.text_input("Enter your username")
+
+    if st.button("Send Reset Link"):
+        if username in st.session_state.users:
+            st.success(f"📧 Reset link sent to {st.session_state.users[username]['email']}")
+        else:
+            st.error("❌ Username not found")
+
+    if st.button("⬅ Back to Login"):
+        st.session_state.stage = "login"
+
+
+# ----------------------
+# SIGN UP PAGE
+# ----------------------
+def signup_page():
+    st.title("📝 Sign Up")
+
+    new_username = st.text_input("Choose a username")
+    new_password = st.text_input("Choose a password", type="password")
+    new_email = st.text_input("Enter your email")
+
+    if st.button("Create Account"):
+        if new_username in st.session_state.users:
+            st.error("⚠ Username already exists")
+        elif new_username and new_password and new_email:
+            st.session_state.users[new_username] = {"password": new_password, "email": new_email}
+            st.success("✅ Account created! You can now login.")
+            st.session_state.stage = "login"
+        else:
+            st.error("❌ Please fill all fields")
+
+    if st.button("⬅ Back to Login"):
+        st.session_state.stage = "login"
+
+
+# ----------------------
 # HOME PAGE
 # ----------------------
 def home_page():
@@ -105,5 +158,9 @@ if st.session_state.stage == "login":
     login_page()
 elif st.session_state.stage == "admin_otp":
     admin_otp_page()
+elif st.session_state.stage == "forgot_password":
+    forgot_password_page()
+elif st.session_state.stage == "signup":
+    signup_page()
 elif st.session_state.stage == "home":
     home_page()
