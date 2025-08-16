@@ -1,12 +1,12 @@
 import streamlit as st
-import plotly.graph_objects as go
 import yfinance as yf
+import plotly.graph_objects as go
 
-st.set_page_config(page_title="Crypto Exchange", layout="wide")
-
-# ----------------------------
+# ---------------------------
 # Header
-# ----------------------------
+# ---------------------------
+st.set_page_config(page_title="Crypto Dashboard", layout="wide")
+
 st.markdown("""
     <style>
     .header {
@@ -14,130 +14,96 @@ st.markdown("""
         justify-content: space-between;
         align-items: center;
         padding: 15px;
-        background-color: #0d0d0d;
-        border-bottom: 1px solid #333;
+        background-color: #111;
+        color: white;
+        border-radius: 10px;
     }
-    .header .logo {
-        font-size: 22px;
+    .header .left {
+        font-size: 24px;
         font-weight: bold;
-        color: gold;
     }
-    .header .menu {
+    .header .right {
         display: flex;
         gap: 20px;
         align-items: center;
     }
-    .menu-item {
-        color: white;
-        cursor: pointer;
-    }
-    .profile-circle {
-        width: 40px;
-        height: 40px;
+    .circle {
+        width: 35px;
+        height: 35px;
+        background-color: #444;
         border-radius: 50%;
-        background-color: gold;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-weight: bold;
         cursor: pointer;
     }
-    .crypto-card {
-        background-color: #1a1a1a;
-        padding: 15px;
-        border-radius: 12px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        color: white;
-        text-align: center;
-    }
-    .price {
-        font-size: 20px;
-        font-weight: bold;
-    }
-    .change-pos {
-        color: lime;
-        font-weight: bold;
-    }
-    .change-neg {
-        color: red;
-        font-weight: bold;
-    }
     </style>
-""", unsafe_allow_html=True)
 
-st.markdown("""
-<div class="header">
-    <div class="logo">Crypto Exchange</div>
-    <div class="menu">
-        <div class="menu-item">Dashboard</div>
-        <div class="menu-item">Charts</div>
-        <div class="menu-item">Wallet</div>
-        <div class="menu-item">News</div>
-        <div class="menu-item">Settings</div>
-        <div class="profile-circle">S</div>
+    <div class="header">
+        <div class="left">💰 Crypto</div>
+        <div class="right">
+            <div>Dashboard</div>
+            <div>Chart</div>
+            <div>Wallet</div>
+            <div>News</div>
+            <div class="circle">⚙️</div>
+        </div>
     </div>
-</div>
 """, unsafe_allow_html=True)
 
-# ----------------------------
-# Crypto List
-# ----------------------------
-cryptos = {
-    "Bitcoin": "BTC-USD",
-    "Ethereum": "ETH-USD",
-    "Binance Coin": "BNB-USD",
-    "Cardano": "ADA-USD",
-    "Ripple": "XRP-USD",
-    "Solana": "SOL-USD"
-}
 
-cols = st.columns(len(cryptos))
-
-# ----------------------------
-# Loop Coins
-# ----------------------------
-for i, (name, ticker) in enumerate(cryptos.items()):
+# ---------------------------
+# Function to create crypto box
+# ---------------------------
+def crypto_box(symbol, name):
     try:
-        data = yf.download(ticker, period="7d", interval="1h")
-
+        data = yf.download(symbol, period="7d", interval="1h")
         if data.empty:
-            with cols[i]:
-                st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>N/A</h3><p>No Data</p></div>", unsafe_allow_html=True)
-        else:
-            latest_price = data["Close"].iloc[-1]
-            prev_price = data["Close"].iloc[-24] if len(data) > 24 else data["Close"].iloc[0]
+            st.error(f"No data for {name}")
+            return
 
-            change_pct = ((latest_price - prev_price) / prev_price) * 100
-            change_class = "change-pos" if change_pct >= 0 else "change-neg"
-            change_symbol = "↑" if change_pct >= 0 else "↓"
+        current_price = float(data["Close"].iloc[-1])
+        start_price = float(data["Close"].iloc[0])
+        change = ((current_price - start_price) / start_price) * 100
 
-            # Trend line
-            color = "lime" if latest_price > data["Close"].iloc[0] else "red"
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=data.index,
-                y=data["Close"],
-                mode="lines",
-                line=dict(color=color, width=2)
-            ))
-            fig.update_layout(
-                template="plotly_dark",
-                margin=dict(l=0, r=0, t=0, b=0),
-                height=100,
-                xaxis=dict(visible=False),
-                yaxis=dict(visible=False)
-            )
+        line_color = "lime" if current_price > start_price else "red"
 
-            with cols[i]:
-                st.markdown(
-                    f"<div class='crypto-card'>"
-                    f"<h4>{name}</h4>"
-                    f"<div class='price'>${latest_price:,.2f}</div>"
-                    f"<div class='{change_class}'>{change_symbol} {change_pct:.2f}% (24h)</div>"
-                    f"</div>", unsafe_allow_html=True
-                )
-                st.plotly_chart(fig, use_container_width=True)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=data.index, y=data["Close"],
+            mode="lines",
+            line=dict(color=line_color, width=2)
+        ))
+        fig.update_layout(
+            xaxis=dict(showgrid=False, showticklabels=False),
+            yaxis=dict(showgrid=False, showticklabels=False),
+            margin=dict(l=10, r=10, t=10, b=10),
+            height=200
+        )
+
+        st.markdown(f"### {name}")
+        st.metric(label="Price", value=f"${current_price:,.2f}", delta=f"{change:.2f}%")
+        st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
-        with cols[i]:
-            st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>Error</h3><p>{str(e)}</p></div>", unsafe_allow_html=True)
+        st.error(f"Error loading {name}: {e}")
+
+
+# ---------------------------
+# Display 6 Crypto Boxes
+# ---------------------------
+col1, col2, col3 = st.columns(3)
+with col1:
+    crypto_box("BTC-USD", "Bitcoin")
+with col2:
+    crypto_box("ETH-USD", "Ethereum")
+with col3:
+    crypto_box("BNB-USD", "Binance Coin")
+
+col4, col5, col6 = st.columns(3)
+with col4:
+    crypto_box("ADA-USD", "Cardano")
+with col5:
+    crypto_box("XRP-USD", "Ripple")
+with col6:
+    crypto_box("SOL-USD", "Solana")
