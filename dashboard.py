@@ -1,162 +1,118 @@
 import streamlit as st
+import plotly.graph_objects as go
+import pandas as pd
+import numpy as np
 
+# ----------------------------
+# Page Config
+# ----------------------------
 st.set_page_config(page_title="Crypto Exchange", layout="wide")
 
-# ----------- Session State for Navigation -----------
-if "page" not in st.session_state:
-    st.session_state["page"] = "Dashboard"
-
-def change_page(page):
-    st.session_state["page"] = page
-
-# ----------- Custom CSS for Header -----------
-header_css = """
-<style>
-/* Navbar container */
-.navbar {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: 60px;
-    background: #0b1020;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 30px;
-    color: white;
-    font-family: "Segoe UI", sans-serif;
-    z-index: 10000;
-    border-bottom: 1px solid #222;
-}
-
-/* Logo */
-.logo {
-    font-size: 20px;
-    font-weight: bold;
-    color: #4ade80;
-}
-
-/* Nav items */
-.nav-links {
-    display: flex;
-    gap: 25px;
-    align-items: center;
-}
-.nav-item {
-    cursor: pointer;
-    font-size: 15px;
-}
-.nav-item:hover {
-    color: #4ade80;
-}
-
-/* Profile circle */
-.profile {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#1f2b66,#2f7f5f);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    position: relative;
-}
-
-/* Dropdown */
-.dropdown {
-    display: none;
-    position: absolute;
-    top: 45px;
-    right: 0;
-    background: #1a1f36;
-    border: 1px solid #333;
-    border-radius: 8px;
-    min-width: 120px;
-    z-index: 9999;
-}
-.dropdown a {
-    display: block;
-    padding: 8px 12px;
-    color: white;
-    text-decoration: none;
-    font-size: 14px;
-}
-.dropdown a:hover {
-    background: #2d3748;
-}
-
-/* Show dropdown on hover */
-.profile:hover .dropdown {
-    display: block;
-}
-</style>
-"""
-
-# ----------- Header HTML -----------
-header_html = f"""
-<div class="navbar">
-    <div class="logo">💹 Crypto</div>
-    <div class="nav-links">
-        <span class="nav-item" onclick="window.parent.postMessage({{type: 'nav', page: 'Dashboard'}}, '*')">Dashboard</span>
-        <span class="nav-item" onclick="window.parent.postMessage({{type: 'nav', page: 'Charts'}}, '*')">Charts</span>
-        <span class="nav-item" onclick="window.parent.postMessage({{type: 'nav', page: 'Wallet'}}, '*')">Wallet</span>
-        <span class="nav-item" onclick="window.parent.postMessage({{type: 'nav', page: 'News'}}, '*')">News</span>
-        <div class="profile">SS
-            <div class="dropdown">
-                <a href="#" onclick="window.parent.postMessage({{type: 'nav', page: 'Settings'}}, '*')">⚙️ Settings</a>
-                <a href="#">🚪 Logout</a>
-            </div>
-        </div>
-    </div>
-</div>
-<br><br><br>
-"""
-
-st.markdown(header_css + header_html, unsafe_allow_html=True)
-
-# ----------- Handle Navigation Events from JS -----------
-
-nav_event = st.query_params.get("nav", None)
-
-# Sync JS click with session_state
+# ----------------------------
+# Custom CSS for Dark Theme
+# ----------------------------
 st.markdown("""
-<script>
-window.addEventListener("message", (event) => {
-    if (event.data.type === "nav") {
-        const page = event.data.page;
-        const url = new URL(window.location);
-        url.searchParams.set("nav", page);
-        window.history.pushState({}, "", url);
-        window.parent.postMessage({type: "streamlit:setComponentValue", key: "nav", value: page}, "*");
-        window.location.reload();
+    <style>
+    body {
+        background-color: #0d0d0d;
+        color: white;
     }
-});
-</script>
+    .sidebar .sidebar-content {
+        background-color: #111111;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background-color: #0d0d0d;
+        border-bottom: 1px solid #333;
+    }
+    .header .logo {
+        font-size: 22px;
+        font-weight: bold;
+        color: gold;
+    }
+    .header .menu {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    .menu-item {
+        color: white;
+        cursor: pointer;
+    }
+    .profile-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: gold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .card {
+        background-color: #1a1a1a;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        color: white;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-if nav_event:
-    st.session_state["page"] = nav_event
+# ----------------------------
+# Header
+# ----------------------------
+st.markdown("""
+<div class="header">
+    <div class="logo">Crypto Exchange</div>
+    <div class="menu">
+        <div class="menu-item">Dashboard</div>
+        <div class="menu-item">Charts</div>
+        <div class="menu-item">Wallet</div>
+        <div class="menu-item">News</div>
+        <div class="menu-item">Settings</div>
+        <div class="profile-circle">S</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# ----------- Main Content -----------
-page = st.session_state["page"]
+# ----------------------------
+# Dashboard Layout
+# ----------------------------
+col1, col2 = st.columns([2, 3])
 
-if page == "Dashboard":
-    st.subheader("📊 Dashboard Overview")
-    st.write("This is the dashboard section.")
+with col1:
+    st.markdown("<div class='card'><h3>Total Balance</h3><h1>$154,610</h1></div>", unsafe_allow_html=True)
 
-elif page == "Charts":
-    st.subheader("📈 Charts Section")
-    st.line_chart({"BTC": [45000, 46000, 45500, 47000, 46500]})
+    # Portfolio
+    st.markdown("<div class='card'><h3>My Portfolio</h3>", unsafe_allow_html=True)
+    portfolio = {
+        "Bitcoin (BTC)": ["37%", "+2.5%"],
+        "Ethereum (ETH)": ["20%", "-1.5%"],
+        "Tether (USDT)": ["23%", "-3.5%"],
+        "Ripple (XRP)": ["17%", "+3.5%"],
+    }
+    for coin, stats in portfolio.items():
+        st.markdown(f"<p>{coin}: {stats[0]} | {stats[1]}</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-elif page == "Wallet":
-    st.subheader("👛 Wallet Section")
-    st.write("Wallet balances here.")
+with col2:
+    # Fake Data for Chart
+    x = pd.date_range("2023-01-01", periods=50)
+    y = np.cumsum(np.random.randn(50)) + 30000
 
-elif page == "News":
-    st.subheader("📰 News Section")
-    st.write("Latest crypto news.")
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color="gold", width=3)))
+    fig.update_layout(
+        template="plotly_dark",
+        margin=dict(l=0, r=0, t=30, b=0),
+        height=400,
+        xaxis=dict(showgrid=False),
+        yaxis=dict(showgrid=False)
+    )
 
-elif page == "Settings":
-    st.subheader("⚙️ Settings Section")
-    st.write("Change profile, preferences, etc.")
+    st.plotly_chart(fig, use_container_width=True)
