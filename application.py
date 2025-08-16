@@ -10,8 +10,8 @@ if "users" not in st.session_state:
         "admin": {"password": "12345", "email": "sumanuser@gmail.com"}
     }
 
-if "stage" not in st.session_state:
-    st.session_state.stage = "login"
+if "page" not in st.session_state:
+    st.session_state.page = "login"
 
 if "otp" not in st.session_state:
     st.session_state.otp = None
@@ -52,26 +52,26 @@ def login_page():
                 st.session_state.current_user = username
                 if username == "admin":  # Special case for admin
                     send_otp(st.session_state.users[username]["email"])
-                    st.session_state.stage = "admin_otp"
+                    st.session_state.page = "otp_page"   # 👈 go to OTP PAGE
                 else:
                     st.success(f"✅ Welcome {username}!")
-                    st.session_state.stage = "home"
+                    st.session_state.page = "home"
             else:
                 st.error("❌ Invalid username or password")
 
     with col2:
         if st.button("Forgot Password?"):
-            st.session_state.stage = "forgot_password"
+            st.session_state.page = "forgot_password"
 
     with col3:
         if st.button("Sign Up"):
-            st.session_state.stage = "signup"
+            st.session_state.page = "signup"
 
 
 # ----------------------
-# ADMIN OTP PAGE
+# OTP VERIFICATION PAGE
 # ----------------------
-def admin_otp_page():
+def otp_page():
     st.title("📧 Email Verification")
 
     masked_email = "su.....@gmail.com"
@@ -90,7 +90,7 @@ def admin_otp_page():
     if st.button("Verify OTP"):
         if entered_otp == st.session_state.otp:
             st.success("✅ Email verified! Welcome Admin 🚀")
-            st.session_state.stage = "home"
+            st.session_state.page = "home"
         else:
             st.error("❌ Invalid OTP")
 
@@ -114,7 +114,7 @@ def forgot_password_page():
             st.error("❌ Username not found")
 
     if st.button("⬅ Back to Login"):
-        st.session_state.stage = "login"
+        st.session_state.page = "login"
 
 
 # ----------------------
@@ -133,12 +133,12 @@ def signup_page():
         elif new_username and new_password and new_email:
             st.session_state.users[new_username] = {"password": new_password, "email": new_email}
             st.success("✅ Account created! You can now login.")
-            st.session_state.stage = "login"
+            st.session_state.page = "login"
         else:
             st.error("❌ Please fill all fields")
 
     if st.button("⬅ Back to Login"):
-        st.session_state.stage = "login"
+        st.session_state.page = "login"
 
 
 # ----------------------
@@ -147,20 +147,20 @@ def signup_page():
 def home_page():
     st.success(f"🎉 Logged in as {st.session_state.current_user}")
     if st.button("Logout"):
-        st.session_state.stage = "login"
+        st.session_state.page = "login"
         st.session_state.current_user = None
 
 
 # ----------------------
 # ROUTER
 # ----------------------
-if st.session_state.stage == "login":
+if st.session_state.page == "login":
     login_page()
-elif st.session_state.stage == "admin_otp":
-    admin_otp_page()
-elif st.session_state.stage == "forgot_password":
+elif st.session_state.page == "otp_page":
+    otp_page()
+elif st.session_state.page == "forgot_password":
     forgot_password_page()
-elif st.session_state.stage == "signup":
+elif st.session_state.page == "signup":
     signup_page()
-elif st.session_state.stage == "home":
+elif st.session_state.page == "home":
     home_page()
