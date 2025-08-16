@@ -41,10 +41,9 @@ def otp_page():
     st.title("🔐 Email Verification")
     st.write("OTP has been sent to **su.....@gmail.com**")
 
-    # Fixed OTP for verification
     CORRECT_OTP = "291004"
 
-    # CSS for square OTP boxes + auto focus
+    # CSS and JS
     st.markdown(
         """
         <style>
@@ -58,6 +57,26 @@ def otp_page():
             border-radius: 8px;
             margin: 3px;
         }
+        .verify-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .verify-btn:disabled {
+            background-color: #cccccc !important;
+            color: #666666 !important;
+            cursor: not-allowed !important;
+        }
+        .verify-btn:enabled {
+            background-color: #00ccaa !important;
+            color: white !important;
+            cursor: pointer !important;
+            box-shadow: 0px 0px 10px rgba(0, 204, 170, 0.8);
+        }
         .link-container {
             text-align:center;
             margin-top: 10px;
@@ -69,8 +88,6 @@ def otp_page():
         }
         .resend { color:#00ccaa; }
         .back { color:#ff4b4b; }
-
-        /* Popup modal */
         .popup {
             position: fixed;
             top: 50%;
@@ -87,19 +104,6 @@ def otp_page():
             z-index: 9999;
         }
         </style>
-
-        <script>
-        document.addEventListener("DOMContentLoaded", function(){
-            const inputs = document.querySelectorAll("input[type='text']");
-            inputs.forEach((input, index) => {
-                input.addEventListener("input", () => {
-                    if (input.value.length === 1 && index < inputs.length - 1) {
-                        inputs[index + 1].focus();
-                    }
-                });
-            });
-        });
-        </script>
         """,
         unsafe_allow_html=True
     )
@@ -109,20 +113,56 @@ def otp_page():
     otp_digits = []
     for i, col in enumerate(cols):
         with col:
-            digit = st.text_input("", max_chars=1, key=f"otp{i}", label_visibility="collapsed")
+            digit = st.text_input(
+                "", max_chars=1, key=f"otp{i}", label_visibility="collapsed"
+            )
             otp_digits.append(digit)
 
     otp_entered = "".join(otp_digits)
 
-    # Verify OTP button (disabled until all boxes filled)
+    # Auto-jump JS
+    st.markdown(
+        """
+        <script>
+        const inputs = window.parent.document.querySelectorAll("input[type='text']");
+        inputs.forEach((input, index) => {
+            input.addEventListener("input", () => {
+                if (input.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && input.value === "" && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Verify OTP button (styled)
     verify_disabled = len(otp_entered) < 6
-    if st.button("Verify OTP", disabled=verify_disabled):
+    btn_html = f"""
+        <form action="" method="get">
+            <button class="verify-btn" type="submit" name="verify" value="1" {'disabled' if verify_disabled else ''}>
+                Verify OTP
+            </button>
+        </form>
+    """
+    st.markdown(btn_html, unsafe_allow_html=True)
+
+    # Check query param when clicked
+    query_params = st.query_params
+    if "verify" in query_params:
         if otp_entered == CORRECT_OTP:
             st.markdown('<div class="popup">✅ Login Successful!</div>', unsafe_allow_html=True)
         else:
-            st.markdown('<div class="popup" style="color:red;">❌ Wrong OTP, try again</div>', unsafe_allow_html=True)
+            st.markdown('<div class="popup" style="color:red;">❌ Wrong OTP, Try Again</div>', unsafe_allow_html=True)
+        st.query_params.clear()
 
-    # Hyperlinks for actions
+    # Links
     st.markdown(
         """
         <div class="link-container">
@@ -133,14 +173,13 @@ def otp_page():
         unsafe_allow_html=True
     )
 
-    # Handle link clicks with st.query_params
-    query_params = st.query_params
     if "resend" in query_params:
         st.info("📩 New OTP has been sent! (For testing: 291004)")
         st.query_params.clear()
     if "back" in query_params:
         st.session_state.page = "login"
         st.query_params.clear()
+
 
 
 
@@ -193,5 +232,6 @@ elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_password_page()
+
 
 
