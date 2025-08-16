@@ -1,111 +1,84 @@
 import streamlit as st
 
-# ---- PAGE CONFIG ----
-st.set_page_config(page_title="Crypto Exchange Login", layout="centered")
+# ----------------------
+# Fake user database (for demo only!)
+# ----------------------
+USER_CREDENTIALS = {
+    "satoshi": "bitcoin123",
+    "vitalik": "ethereum2025",
+    "admin": "cryptoMaster"
+}
 
-# ---- CSS STYLING ----
-st.markdown("""
+# ----------------------
+# Page Config
+# ----------------------
+st.set_page_config(page_title="Crypto Exchange Login", page_icon="🪙", layout="centered")
+
+# Background styling
+st.markdown(
+    """
     <style>
-        body {
-            background-color: #0d1117;
-            color: white;
-        }
-        .box {
-            background-color: #0f1a2b;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 400px;
-            margin: auto;
-            box-shadow: 0 0 15px rgba(0,0,0,0.6);
-        }
-        .stButton button {
-            background: linear-gradient(90deg, #0072ff, #00c6ff);
-            color: white;
-            border-radius: 25px;
-            height: 45px;
-            width: 100%;
-            border: none;
-            font-size: 16px;
-        }
-        .link {
-            color: #00c6ff;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: white;
+    }
+    .stTextInput > div > div > input {
+        background-color: #111;
+        color: white;
+        border: 1px solid #00ffcc;
+        border-radius: 10px;
+    }
+    .stPasswordInput > div > div > input {
+        background-color: #111;
+        color: white;
+        border: 1px solid #00ffcc;
+        border-radius: 10px;
+    }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
+# ----------------------
+# Title
+# ----------------------
+st.markdown(
+    "<h1 style='text-align: center; color: #00ffcc;'>🚀 Crypto Exchange Login</h1>",
+    unsafe_allow_html=True
+)
+st.markdown(
+    "<p style='text-align:center; color:gray;'>Secure access to your digital assets</p>",
+    unsafe_allow_html=True
+)
 
-# ---- SESSION STATE ----
-if "page" not in st.session_state:
-    st.session_state.page = "login"
+# ----------------------
+# Login Form
+# ----------------------
+with st.form("login_form"):
+    username = st.text_input("👤 Username")
+    password = st.text_input("🔑 Password", type="password")
+    submitted = st.form_submit_button("Login")
 
+    if submitted:
+        if username in USER_CREDENTIALS and USER_CREDENTIALS[username] == password:
+            st.success(f"✅ Welcome back, {username}! 🚀")
+            st.balloons()
+        else:
+            st.error("❌ Invalid Username or Password")
 
-# ---- LOGIN PAGE ----
-def login_page():
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.subheader("🔐 Login to Crypto Exchange")
+# ----------------------
+# Extra Options
+# ----------------------
+col1, col2 = st.columns(2)
 
-    st.text_input("Username", key="login_user", placeholder="Enter username")
-    st.text_input("Password", type="password", key="login_pass", placeholder="Enter password")
+with col1:
+    st.markdown(
+        "<p style='text-align:left;'><a href='#' style='color:#00ffcc; text-decoration:none;'>🔒 Forgot Password?</a></p>",
+        unsafe_allow_html=True
+    )
 
-    if st.button("Login"):
-        st.success("✅ Logged in successfully!")
-
-    if st.button("Forgot Password?"):
-        st.session_state.page = "forgot"
-
-    st.markdown("---")
-    st.markdown("Don't have an account?")
-    if st.button("Sign Up"):
-        st.session_state.page = "signup"
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ---- SIGNUP PAGE ----
-def signup_page():
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.subheader("📝 Create New Account")
-
-    st.text_input("Full Name")
-    st.text_input("Email Address")
-    st.text_input("Password", type="password")
-    st.text_input("Confirm Password", type="password")
-
-    if st.button("Sign Up"):
-        st.success("✅ Account created! Please login.")
-        st.session_state.page = "login"
-
-    if st.button("Back to Login"):
-        st.session_state.page = "login"
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ---- FORGOT PASSWORD PAGE ----
-def forgot_page():
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.subheader("🔑 Recover Password")
-
-    st.write("Choose a method to reset your password:")
-    if st.button("Reset via Email"):
-        st.info("📧 Password reset link sent to your email!")
-    if st.button("Reset via SMS"):
-        st.info("📱 SMS sent to your registered phone number!")
-    if st.button("Sign in with Google"):
-        st.success("✅ Signed in with Google!")
-
-    if st.button("Back to Login"):
-        st.session_state.page = "login"
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ---- ROUTING ----
-if st.session_state.page == "login":
-    login_page()
-elif st.session_state.page == "signup":
-    signup_page()
-elif st.session_state.page == "forgot":
-    forgot_page()
+with col2:
+    st.markdown(
+        "<p style='text-align:right;'>New here? <a href='#' style='color:#ffcc00; text-decoration:none;'>📝 Sign Up</a></p>",
+        unsafe_allow_html=True
+    )
