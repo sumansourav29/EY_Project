@@ -103,15 +103,16 @@ def otp_page():
         unsafe_allow_html=True
     )
 
-    # Handle link clicks using query params
-    query_params = st.experimental_get_query_params()
+    # Handle link clicks using new query_params API
+    query_params = st.query_params  # ✅ new method
     if "resend" in query_params:
         st.session_state.otp = generate_otp()
         st.info(f"📩 New OTP has been sent! (For testing: {st.session_state.otp})")
-        st.experimental_set_query_params()  # clear params
+        st.query_params.clear()  # clear params
     if "back" in query_params:
         st.session_state.page = "login"
-        st.experimental_set_query_params()  # clear params
+        st.query_params.clear()  # clear params
+
 
 
 # ----------------------
@@ -162,3 +163,4 @@ elif st.session_state.page == "signup":
     signup_page()
 elif st.session_state.page == "forgot":
     forgot_password_page()
+
