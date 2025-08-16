@@ -1,121 +1,83 @@
 import streamlit as st
 
-# -- INITIALIZE --
-if "USER_CREDENTIALS" not in st.session_state:
-    st.session_state.USER_CREDENTIALS = {"satoshi": "bitcoin123"}
+# Page config
+st.set_page_config(page_title="Crypto Exchange Login", page_icon="🪙", layout="centered")
 
-if "page" not in st.session_state:
-    st.session_state.page = "login"
-
-st.set_page_config(page_title="Crypto Exchange", page_icon="🪙", layout="centered")
-
-# -- CSS STYLING --
+# Custom CSS
 st.markdown("""
-<style>
+    <style>
     body {
-        background: #020202;
+        background: linear-gradient(135deg, #0f0f0f, #1a1a1a, #141e30);
         color: white;
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Poppins', sans-serif;
     }
-
-    .glass {
-        background: rgba(20, 20, 30, 0.6);
-        border-radius: 16px;
-        padding: 30px;
-        box-shadow: 0 0 30px rgba(0, 255, 204, 0.2);
-        backdrop-filter: blur(8px);
+    .login-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        max-width: 400px;
         margin: auto;
     }
-
-    .neon-input input {
-        background: transparent;
-        color: white;
-        border: 2px solid #00ffcc;
-        border-radius: 12px;
-        padding: 10px;
-        font-size: 1em;
+    .login-title {
+        font-size: 32px;
+        font-weight: 700;
+        text-align: center;
+        color: #00ffcc;
+        margin-bottom: 20px;
     }
-
-    .neon-input input:focus {
-        box-shadow: 0 0 8px #00ffcc;
-        outline: none;
-    }
-
-    .neon-btn>button {
-        background: linear-gradient(90deg, #00ffcc, #599edb);
+    .stTextInput > div > div > input {
+        background: rgba(255,255,255,0.1);
         border: none;
-        color: black;
-        font-size: 1em;
-        padding: 0.6em 1.4em;
         border-radius: 12px;
-        font-weight: bold;
-        text-shadow: 0 0 4px rgba(0,0,0,0.5);
-        transition: transform .2s, box-shadow .2s;
+        color: white;
+        padding: 10px;
     }
-
-    .neon-btn>button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 0 12px #00ffcc;
+    .stTextInput > div > div > input:focus {
+        outline: none;
+        border: 2px solid #00ffcc;
     }
-
-    h1 { color: #00ffcc; font-family: 'Orbitron', sans-serif; text-align: center; }
-    p { text-align: center; color: #888; }
-</style>
+    .stButton>button {
+        width: 100%;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #00ffcc, #0077ff);
+        color: black;
+        font-weight: 600;
+        padding: 10px;
+    }
+    .stButton>button:hover {
+        background: linear-gradient(90deg, #0077ff, #00ffcc);
+        color: white;
+    }
+    .link {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    .link a {
+        color: #ffcc00;
+        text-decoration: none;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# -- PAGES --
-def show_login():
-    st.markdown("<div class='glass'><h1>Crypto Login</h1><p>Secure access to your assets</p></div>", unsafe_allow_html=True)
-    with st.form("login_form"):
-        st.text_input("Username", key="login_user", placeholder="Enter username", label_visibility="collapsed", **{"class":"neon-input"})
-        st.text_input("Password", type="password", key="login_pass", placeholder="Enter password", label_visibility="collapsed", **{"class":"neon-input"})
-        if st.form_submit_button("Login", **{"class":"neon-btn"}):
-            u, p = st.session_state.login_user, st.session_state.login_pass
-            if u in st.session_state.USER_CREDENTIALS and st.session_state.USER_CREDENTIALS[u] == p:
-                st.success(f"Welcome back, **{u}**! 🚀")
-                st.balloons()
-            else:
-                st.error("Invalid credentials")
+# Login Form
+st.markdown('<div class="login-card">', unsafe_allow_html=True)
+st.markdown('<div class="login-title">🔐 Login</div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Forgot Password?", key="fp_btn"):
-            st.session_state.page = "forgot"; st.rerun()
-    with col2:
-        if st.button("Sign Up", key="su_btn"):
-            st.session_state.page = "signup"; st.rerun()
+username = st.text_input("Username", key="login_user", placeholder="Enter username", label_visibility="collapsed")
+password = st.text_input("Password", key="login_pass", placeholder="Enter password", type="password", label_visibility="collapsed")
 
-def show_forgot():
-    st.markdown("<div class='glass'><h1>Recover Account</h1><p>Pick a recovery option</p></div>", unsafe_allow_html=True)
-    option = st.radio("", ["Email", "Mobile OTP", "Auth App", "Security Qs"], label_visibility="collapsed")
-    if st.button("Proceed"):
-        st.success(f"Recovery via **{option}** triggered!")
-    if st.button("Back to Login"):
-        st.session_state.page = "login"; st.rerun()
+if st.button("Login"):
+    if username == "satoshi" and password == "bitcoin123":
+        st.success("✅ Welcome back, Satoshi!")
+    else:
+        st.error("❌ Invalid credentials")
 
-def show_signup():
-    st.markdown("<div class='glass'><h1>Sign Up</h1><p>Create your crypto account</p></div>", unsafe_allow_html=True)
-    with st.form("signup_form"):
-        st.text_input("Username", key="su_user", placeholder="Pick a username", label_visibility="collapsed", **{"class":"neon-input"})
-        st.text_input("Email", key="su_email", placeholder="you@example.com", label_visibility="collapsed", **{"class":"neon-input"})
-        st.text_input("Password", type="password", key="su_pass", placeholder="Password", label_visibility="collapsed", **{"class":"neon-input"})
-        st.text_input("Confirm Password", type="password", key="su_pass2", placeholder="Confirm Password", label_visibility="collapsed", **{"class":"neon-input"})
-        if st.form_submit_button("Create Account", **{"class":"neon-btn"}):
-            u, p1, p2 = st.session_state.su_user, st.session_state.su_pass, st.session_state.su_pass2
-            if u in st.session_state.USER_CREDENTIALS: st.error("Username already taken")
-            elif p1 != p2: st.error("Passwords do not match")
-            else:
-                st.session_state.USER_CREDENTIALS[u] = p1
-                st.success(f"Account created for **{u}**!")
-                st.snow()
-                st.session_state.page = "login"; st.rerun()
-    if st.button("Back to Login"):
-        st.session_state.page = "login"; st.rerun()
+st.markdown('<div class="link"><a href="#">Forgot Password?</a></div>', unsafe_allow_html=True)
+st.markdown('<div class="link">New here? <a href="#">Sign Up</a></div>', unsafe_allow_html=True)
 
-# -- ROUTE --
-if st.session_state.page == "login":
-    show_login()
-elif st.session_state.page == "forgot":
-    show_forgot()
-elif st.session_state.page == "signup":
-    show_signup()
+st.markdown('</div>', unsafe_allow_html=True)
