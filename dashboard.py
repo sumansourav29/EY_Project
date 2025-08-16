@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
+import yfinance as yf
 import pandas as pd
-import numpy as np
 
 # ----------------------------
 # Page Config
@@ -9,16 +9,13 @@ import numpy as np
 st.set_page_config(page_title="Crypto Exchange", layout="wide")
 
 # ----------------------------
-# Custom CSS for Dark Theme
+# Custom CSS
 # ----------------------------
 st.markdown("""
     <style>
     body {
         background-color: #0d0d0d;
         color: white;
-    }
-    .sidebar .sidebar-content {
-        background-color: #111111;
     }
     .header {
         display: flex;
@@ -53,12 +50,13 @@ st.markdown("""
         font-weight: bold;
         cursor: pointer;
     }
-    .card {
+    .crypto-card {
         background-color: #1a1a1a;
-        padding: 20px;
-        border-radius: 15px;
+        padding: 15px;
+        border-radius: 12px;
         box-shadow: 0 0 10px rgba(0,0,0,0.5);
         color: white;
+        text-align: center;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -80,39 +78,44 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+
 # ----------------------------
-# Dashboard Layout
+# Crypto Tickers
 # ----------------------------
-col1, col2 = st.columns([2, 3])
+cryptos = {
+    "Bitcoin": "BTC-USD",
+    "Ethereum": "ETH-USD",
+    "Binance Coin": "BNB-USD",
+    "Cardano": "ADA-USD",
+    "Ripple": "XRP-USD",
+    "Solana": "SOL-USD"
+}
 
-with col1:
-    st.markdown("<div class='card'><h3>Total Balance</h3><h1>$154,610</h1></div>", unsafe_allow_html=True)
+# ----------------------------
+# Display Crypto Cards
+# ----------------------------
+cols = st.columns(len(cryptos))
 
-    # Portfolio
-    st.markdown("<div class='card'><h3>My Portfolio</h3>", unsafe_allow_html=True)
-    portfolio = {
-        "Bitcoin (BTC)": ["37%", "+2.5%"],
-        "Ethereum (ETH)": ["20%", "-1.5%"],
-        "Tether (USDT)": ["23%", "-3.5%"],
-        "Ripple (XRP)": ["17%", "+3.5%"],
-    }
-    for coin, stats in portfolio.items():
-        st.markdown(f"<p>{coin}: {stats[0]} | {stats[1]}</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+for i, (name, ticker) in enumerate(cryptos.items()):
+    data = yf.download(ticker, period="7d", interval="1h")
+    latest_price = data["Close"].iloc[-1]
 
-with col2:
-    # Fake Data for Chart
-    x = pd.date_range("2023-01-01", periods=50)
-    y = np.cumsum(np.random.randn(50)) + 30000
-
+    # Mini Chart
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y, mode='lines', line=dict(color="gold", width=3)))
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data["Close"],
+        mode="lines",
+        line=dict(color="lime" if data["Close"].iloc[-1] > data["Close"].iloc[0] else "red", width=2)
+    ))
     fig.update_layout(
         template="plotly_dark",
-        margin=dict(l=0, r=0, t=30, b=0),
-        height=400,
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False)
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=100,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False)
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    with cols[i]:
+        st.markdown(f"<div class='crypto-card'><h4>{name}</h4><h3>${latest_price:,.2f}</h3></div>", unsafe_allow_html=True)
+        st.plotly_chart(fig, use_container_width=True)
